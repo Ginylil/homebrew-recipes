@@ -5,11 +5,10 @@
 class Fon < Formula
   desc "Terminal learning agent: PTY proxy, typo fix, error capture, IDE rules"
   homepage "https://fon.ginylil.com"
-  url "https://fon.ginylil.com/releases/version"
-  # Bump version and sha256 when cutting releases (version JSON and this checksum change each release).
+  # Versioned URL (same as make download-web-latest VERSION=x.y.z). Version and sha256 updated by CI.
+  url "https://fon.ginylil.com/releases/#{version}/version"
   version "1.0.1"
   license "Apache-2.0"
-  # SHA256 of the current releases/version JSON. Update when deploying a new release (re-run: curl -sL https://fon.ginylil.com/releases/version | shasum -a 256).
   sha256 "305ead4c0ab35698e5da9136af98b8992f5380f7428353be5e233e05ca3eb088"
 
   livecheck do
@@ -30,8 +29,8 @@ class Fon < Formula
     data = if version_file.exist?
       JSON.parse(File.read(version_file))
     else
-      # Fallback: fetch version JSON (e.g. if cached filename differs).
-      uri = URI("#{base}/version")
+      # Fallback: fetch this version's JSON (releases/{version}/version).
+      uri = URI("#{base}/#{version}/version")
       resp = Net::HTTP.get_response(uri)
       raise "Could not fetch #{uri}" unless resp.is_a?(Net::HTTPSuccess)
       JSON.parse(resp.body)
@@ -67,5 +66,7 @@ class Fon < Formula
 
   test do
     assert_match(/usage|fon/i, shell_output("#{bin}/fon --help 2>&1"))
+    version_out = shell_output("#{bin}/fon --version 2>&1")
+    assert_match(/\d+\.\d+\.\d+/, version_out, "fon --version should print a semver")
   end
 end

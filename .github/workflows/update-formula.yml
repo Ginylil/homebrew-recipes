@@ -1,0 +1,68 @@
+# Update Formula/fon.rb to a specific fon version using releases/{version}/version (same as make download-web-latest VERSION=x.y.z).
+# Trigger: Actions → Update fon formula → Run workflow, enter the version (e.g. 1.0.2) to pin.
+name: Update fon formula
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "fon version to pin (e.g. 1.0.2). Must be deployed at fon.ginylil.com/releases/{version}/version."
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    name: Update version and sha256
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.3.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch version JSON for requested version
+        id: fetch
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          URL="https://fon.ginylil.com/releases/${VERSION}/version"
+          BODY=$(curl -sSL -w "\n%{http_code}" "$URL")
+          HTTP_CODE=$(echo "$BODY" | tail -n1)
+          BODY=$(echo "$BODY" | sed '$d')
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::GET $URL returned $HTTP_CODE. Ensure version $VERSION is deployed (releases/${VERSION}/version exists)."
+            exit 1
+          fi
+          PARSED=$(echo "$BODY" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+          if [ -z "$PARSED" ] || [ "$PARSED" != "$VERSION" ]; then
+            echo "::error::Invalid or version-mismatch JSON at $URL (got version '$PARSED')."
+            exit 1
+          fi
+          SHA=$(printf '%s' "$BODY" | sha256sum | awk '{print $1}')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "sha256=$SHA" >> $GITHUB_OUTPUT
+          echo "Using version=$VERSION sha256=$SHA"
+
+      - name: Update formula
+        run: |
+          VERSION="${{ steps.fetch.outputs.version }}"
+          SHA="${{ steps.fetch.outputs.sha256 }}"
+          RB="Formula/fon.rb"
+          # Replace version "X.Y.Z" and sha256 "..." with current values
+          sed -i.bak "s/version \"[^\"]*\"/version \"$VERSION\"/" "$RB"
+          sed -i.bak "s/sha256 \"[a-f0-9]*\"/sha256 \"$SHA\"/" "$RB"
+          rm -f "${RB}.bak"
+
+      - name: Commit and push if changed
+        run: |
+          if git diff --quiet Formula/fon.rb; then
+            echo "Formula unchanged (already at ${{ steps.fetch.outputs.version }})"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/fon.rb
+          git commit -m "chore(fon): update formula to ${{ steps.fetch.outputs.version }}"
+          git push
