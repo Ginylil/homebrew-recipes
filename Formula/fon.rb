@@ -61,6 +61,7 @@ class Fon < Formula
 
   def post_install
     # Add fon to IDE MCP configs and Cursor commands (same as fon_install.py --ide-only).
+    ohai "fon: running post_install (IDE setup)"
     script_url = "https://fon.ginylil.com/fon_install.py"
     script_path = buildpath/"fon_install.py"
     unless system("curl", "-fL", script_url, "-o", script_path.to_s)
