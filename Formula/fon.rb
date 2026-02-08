@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "open3"
 require "yaml"
 
 # fon — terminal learning agent. Remember, remember, the fifth of November.
@@ -62,14 +63,16 @@ class Fon < Formula
     # Add fon to IDE MCP configs and Cursor commands (same as fon_install.py --ide-only).
     script_url = "https://fon.ginylil.com/fon_install.py"
     script_path = buildpath/"fon_install.py"
-    curl_ok = system("curl", "-fL", script_url, "-o", script_path.to_s)
-    unless curl_ok
+    unless system("curl", "-fL", script_url, "-o", script_path.to_s)
       opoo "Could not download #{script_url}. Run later: curl -sSL #{script_url} | python3 - --ide-only"
-      return
+      raise "post_install: download failed"
     end
     env = ENV.to_h.merge("FON_BIN" => (bin/"fon").to_s)
-    unless system(env, "python3", script_path.to_s, "--ide-only")
-      opoo "IDE setup (--ide-only) failed. Run: curl -sSL #{script_url} | python3 - --ide-only"
+    out, err, status = Open3.capture3(env, "python3", script_path.to_s, "--ide-only")
+    unless status.success?
+      opoo "IDE setup (--ide-only) failed. Run manually: curl -sSL #{script_url} | python3 - --ide-only"
+      opoo err.strip if err.to_s.strip != ""
+      raise "post_install: IDE setup failed"
     end
   end
 
