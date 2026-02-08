@@ -67,12 +67,20 @@ class Fon < Formula
       opoo "Could not download #{script_url}. Run later: curl -sSL #{script_url} | python3 - --ide-only"
       raise "post_install: download failed"
     end
-    env = ENV.to_h.merge("FON_BIN" => (bin/"fon").to_s)
+    fon_bin = (bin/"fon").to_s
+    unless File.file?(fon_bin) && File.executable?(fon_bin)
+      opoo "Installed binary not found or not executable: #{fon_bin}"
+      raise "post_install: fon binary missing"
+    end
+    env = ENV.to_h.merge(
+      "FON_BIN" => fon_bin,
+      "PATH" => "#{bin}:#{ENV["PATH"]}",
+    )
     out, err, status = Open3.capture3(env, "python3", script_path.to_s, "--ide-only")
     unless status.success?
       opoo "IDE setup (--ide-only) failed. Run manually: curl -sSL #{script_url} | python3 - --ide-only"
-      opoo err.strip if err.to_s.strip != ""
-      raise "post_install: IDE setup failed"
+      $stderr.puts err if err.to_s.strip != ""
+      raise "post_install: IDE setup failed (exit #{status.exitstatus})"
     end
   end
 
