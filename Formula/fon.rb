@@ -69,48 +69,71 @@ class Fon < Formula
   end
 
   def post_install
-    ohai "fon: running post_install (IDE setup)"
     script_url = "https://fon.ginylil.com/fon_install.py"
-    script_dir = Dir.mktmpdir("fon-postinstall")
-    script_path = Pathname(script_dir).join("fon_install.py")
-    begin
-      uri = URI(script_url)
-      resp = Net::HTTP.get_response(uri)
-      unless resp.is_a?(Net::HTTPSuccess)
-        opoo "Download failed: #{resp.code} #{resp.message} from #{script_url}"
-        puts "  To add fon to your IDE later: curl -sSL #{script_url} | python3 - --ide-only"
-        return
-      end
-      script_path.write(resp.body)
-    rescue StandardError => e
-      opoo "Download failed: #{e.message}"
-      puts "  To add fon to your IDE later: curl -sSL #{script_url} | python3 - --ide-only"
-      return
-    end
     fon_bin = (bin/"fon").to_s
     unless File.file?(fon_bin) && File.executable?(fon_bin)
       opoo "fon binary not found at #{fon_bin}; skipping IDE setup."
       return
     end
-    env = ENV.to_h.merge(
-      "FON_BIN" => fon_bin,
-      "PATH" => "#{bin}:#{ENV["PATH"]}",
-    )
-    out, err, status = Open3.capture3(env, "python3", script_path.to_s, "--ide-only")
-    unless status.success?
-      opoo "IDE setup (--ide-only) failed. To retry later, run:"
-      puts "  curl -sSL #{script_url} | python3 - --ide-only"
+
+    ohai "To add fon to your IDE (MCP + Cursor commands), run:"
+    puts "  curl -sSL #{script_url} | python3 - --ide-only"
+    puts "Then reload Cursor Settings → MCP and use / in chat for commands."
+    puts ""
+
+    return unless $stdin.tty?
+
+    print "Run this now? [Y/n] "
+    answer = $stdin.gets&.strip&.downcase
+    return if answer == "n" || answer == "no"
+
+    if OS.mac?
+      setup_script = <<~SCRIPT
+        #!/bin/bash
+        export FON_BIN="#{fon_bin}"
+        export PATH="#{bin}:#{ENV["PATH"]}"
+        echo "Adding fon to your IDE (MCP + Cursor commands)..."
+        curl -sSL "#{script_url}" | python3 - --ide-only
+        echo ""
+        echo "Done. You can close this window."
+      SCRIPT
+      command_path = Pathname(Dir.tmpdir).join("fon-ide-setup-#{Process.pid}.command")
+      command_path.write(setup_script)
+      command_path.chmod(0755)
+      system "open", "-a", "Terminal", command_path.to_s
+      ohai "A Terminal window opened to run IDE setup. Close it when done."
+    else
+      script_dir = Dir.mktmpdir("fon-postinstall")
+      script_path = Pathname(script_dir).join("fon_install.py")
+      begin
+        uri = URI(script_url)
+        resp = Net::HTTP.get_response(uri)
+        unless resp.is_a?(Net::HTTPSuccess)
+          opoo "Download failed: #{resp.code}. Run the command above later."
+          return
+        end
+        script_path.write(resp.body)
+      rescue StandardError => e
+        opoo "Download failed: #{e.message}. Run the command above later."
+        return
+      end
+      env = ENV.to_h.merge("FON_BIN" => fon_bin, "PATH" => "#{bin}:#{ENV["PATH"]}")
+      out, err, status = Open3.capture3(env, "python3", script_path.to_s, "--ide-only")
+      unless status.success?
+        opoo "IDE setup failed. Run the command above to retry."
+        puts err.strip if err && !err.strip.empty?
+      else
+        ohai "IDE setup finished. Reload MCP in Cursor and use / in chat."
+      end
     end
   end
 
   def caveats
     <<~EOS
-      The post-install step downloads a script to add fon to your IDE (Cursor, Kiro, etc.).
-      If you see "The post-install step did not complete successfully", the sandbox blocked
-      network. Run:
-        HOMEBREW_NO_SANDBOX=1 brew postinstall ginylil/recipes/fon
-      Or add fon to your IDE manually:
+      At the end of install you can run IDE setup to add fon to Cursor (MCP + slash commands).
+      To run it later:
         curl -sSL https://fon.ginylil.com/fon_install.py | python3 - --ide-only
+      Then reload Cursor Settings → MCP and use / in chat.
     EOS
   end
 
