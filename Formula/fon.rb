@@ -93,30 +93,17 @@ class Fon < Formula
     answer = $stdin.gets&.strip&.downcase
     return if answer == "n" || answer == "no"
 
-    ohai "Running IDE setup for fon #{version} (script: #{script_url})"
-    # Run in-process (sandbox may block writes to ~/.cursor on macOS; then user runs command in their terminal).
-    script_dir = Dir.mktmpdir("fon-postinstall")
-    script_path = Pathname(script_dir).join("fon_install.py")
-    begin
-      uri = URI(script_url)
-      resp = Net::HTTP.get_response(uri)
-      unless resp.is_a?(Net::HTTPSuccess)
-        opoo "Download failed: #{resp.code}. Run the command above in your terminal."
-        return
-      end
-      script_path.write(resp.body)
-    rescue StandardError => e
-      opoo "Download failed: #{e.message}. Run the command above in your terminal."
-      return
-    end
     # Use effective user's home from system (Homebrew overrides HOME to a temp dir).
     real_home = (Etc.getpwuid(Process.euid).dir rescue Dir.home)
+    ohai "Running IDE setup for fon #{version} (HOME=#{real_home}, script: #{script_url})"
     env = ENV.to_h.merge(
       "FON_BIN" => fon_bin,
       "PATH" => "#{bin}:#{ENV["PATH"]}",
       "HOME" => real_home,
     )
-    out, err, status = Open3.capture3(env, "python3", script_path.to_s, "--ide-only")
+    # Run same as user: curl | python3 - (script from stdin).
+    cmd = "curl -sSL #{script_url} | python3 - --ide-only"
+    out, err, status = Open3.capture3(env, "bash", "-c", cmd)
     if status.success?
       puts out if out && !out.strip.empty?
       ohai "IDE setup finished. Reload MCP in Cursor and use / in chat."
