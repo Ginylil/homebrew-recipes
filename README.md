@@ -5,15 +5,10 @@ Homebrew tap for **fon** — terminal learning agent (rules enforcer, PTY proxy,
 ## Install
 
 ```bash
-brew tap ginylil/recipes
-brew install fon
+brew install ginylil/recipes/fon
 ```
 
-(One-liner without pre-tap: `brew install ginylil/recipes/fon`.)
-
-If you had the old tap `ginylil/fon`, run: `brew untap ginylil/fon` then `brew tap ginylil/recipes`.
-
-Homebrew adds the tap on first install if you use the one-liner. The formula installs the signed binary from [fon.ginylil.com](https://fon.ginylil.com) and runs the same IDE setup as the Python installer: it adds fon to your IDE MCP configs (Cursor, Kiro, Windsurf, etc.) and installs Cursor global commands.
+Homebrew adds the tap automatically. If you had the old tap `ginylil/fon`, run: `brew untap ginylil/fon` first. The formula installs the signed binary from [fon.ginylil.com](https://fon.ginylil.com) and runs the same IDE setup as the Python installer: it adds fon to your IDE MCP configs (Cursor, Kiro, Windsurf, etc.) and installs Cursor global commands.
 
 If the IDE setup step fails (e.g. no network or no Python), install the binary only and run:
 
