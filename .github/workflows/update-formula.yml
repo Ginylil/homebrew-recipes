@@ -1,13 +1,17 @@
-# Update Formula/fon.rb to a specific fon version using releases/{version}/version (same as make download-web-latest VERSION=x.y.z).
-# Trigger: Actions → Update fon formula → Run workflow, enter the version (e.g. 1.0.2) to pin.
+# Update Formula/fon_versions.yaml (version table) and regenerate versioned formulae.
+# Trigger: Actions → Update fon formula → Run workflow. Optionally pass sha256 if the computed one fails (e.g. from brew install error).
 name: Update fon formula
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: "fon version to pin (e.g. 1.0.2). Must be deployed at fon.ginylil.com/releases/{version}/version."
+        description: "fon version (e.g. 0.0.17). Must be deployed at fon.ginylil.com/releases/{version}/version."
         required: true
+        type: string
+      sha256:
+        description: "Optional. SHA-256 of releases/{version}/version. If omitted, computed from download. Set this if brew reports a different checksum."
+        required: false
         type: string
 
 permissions:
@@ -15,7 +19,7 @@ permissions:
 
 jobs:
   update:
-    name: Update version and sha256
+    name: Update version table and formulae
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -23,41 +27,58 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Fetch version JSON and compute sha256
+      - name: Fetch version and compute or use sha256
         id: fetch
         run: |
           VERSION="${{ github.event.inputs.version }}"
+          SHA_INPUT="${{ github.event.inputs.sha256 }}"
           URL="https://fon.ginylil.com/releases/${VERSION}/version"
-          # Download to file so sha256 matches what Homebrew verifies (exact bytes from URL)
-          curl -sSL -f -o version.json "$URL" || { echo "::error::GET $URL failed. Ensure version $VERSION is deployed (releases/${VERSION}/version exists)."; exit 1; }
-          PARSED=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' version.json | head -1)
-          if [ -z "$PARSED" ] || [ "$PARSED" != "$VERSION" ]; then
-            echo "::error::Invalid or version-mismatch JSON at $URL (got version '$PARSED')."
-            exit 1
+
+          if [ -n "$SHA_INPUT" ]; then
+            SHA=$(printf '%s' "$SHA_INPUT" | tr -d '[:space:]' | grep -E '^[a-f0-9]{64}$' || true)
+            if [ -z "$SHA" ]; then
+              echo "::error::Optional sha256 must be 64 hex characters."
+              exit 1
+            fi
+            echo "Using provided sha256=$SHA"
+          else
+            curl -sSL -f -o version.json "$URL" || { echo "::error::GET $URL failed. Ensure version $VERSION is deployed."; exit 1; }
+            PARSED=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' version.json | head -1)
+            if [ -z "$PARSED" ] || [ "$PARSED" != "$VERSION" ]; then
+              echo "::error::Invalid or version-mismatch JSON at $URL (got '$PARSED')."
+              exit 1
+            fi
+            SHA=$(sha256sum version.json | awk '{print $1}')
+            echo "Computed sha256=$SHA from download"
           fi
-          SHA=$(sha256sum version.json | awk '{print $1}')
+
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "sha256=$SHA" >> $GITHUB_OUTPUT
-          echo "Using version=$VERSION sha256=$SHA"
 
-      - name: Update formula
+      - name: Update fon_versions.yaml
         run: |
           VERSION="${{ steps.fetch.outputs.version }}"
           SHA="${{ steps.fetch.outputs.sha256 }}"
-          RB="Formula/fon.rb"
-          # Replace version "X.Y.Z" and sha256 "..." with current values
-          sed -i.bak "s/version \"[^\"]*\"/version \"$VERSION\"/" "$RB"
-          sed -i.bak "s/sha256 \"[a-f0-9]*\"/sha256 \"$SHA\"/" "$RB"
-          rm -f "${RB}.bak"
+          ruby -r yaml -e "
+            path = 'Formula/fon_versions.yaml'
+            data = YAML.load_file(path)
+            data['versions'] ||= {}
+            data['versions']['$VERSION'] = '$SHA'
+            data['latest'] = '$VERSION'
+            File.write(path, data.to_yaml)
+          "
+
+      - name: Regenerate versioned formulae
+        run: ruby scripts/generate-versioned-formulae.rb
 
       - name: Commit and push if changed
         run: |
-          if git diff --quiet Formula/fon.rb; then
-            echo "Formula unchanged (already at ${{ steps.fetch.outputs.version }})"
+          if git diff --quiet Formula/; then
+            echo "No changes (table and formulae already up to date)"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Formula/fon.rb
-          git commit -m "chore(fon): update formula to ${{ steps.fetch.outputs.version }}"
+          git add Formula/
+          git commit -m "chore(fon): update version table and formulae to ${{ steps.fetch.outputs.version }}"
           git push
