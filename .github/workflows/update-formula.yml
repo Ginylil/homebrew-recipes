@@ -23,24 +23,19 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Fetch version JSON for requested version
+      - name: Fetch version JSON and compute sha256
         id: fetch
         run: |
           VERSION="${{ github.event.inputs.version }}"
           URL="https://fon.ginylil.com/releases/${VERSION}/version"
-          BODY=$(curl -sSL -w "\n%{http_code}" "$URL")
-          HTTP_CODE=$(echo "$BODY" | tail -n1)
-          BODY=$(echo "$BODY" | sed '$d')
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "::error::GET $URL returned $HTTP_CODE. Ensure version $VERSION is deployed (releases/${VERSION}/version exists)."
-            exit 1
-          fi
-          PARSED=$(echo "$BODY" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+          # Download to file so sha256 matches what Homebrew verifies (exact bytes from URL)
+          curl -sSL -f -o version.json "$URL" || { echo "::error::GET $URL failed. Ensure version $VERSION is deployed (releases/${VERSION}/version exists)."; exit 1; }
+          PARSED=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' version.json | head -1)
           if [ -z "$PARSED" ] || [ "$PARSED" != "$VERSION" ]; then
             echo "::error::Invalid or version-mismatch JSON at $URL (got version '$PARSED')."
             exit 1
           fi
-          SHA=$(printf '%s' "$BODY" | sha256sum | awk '{print $1}')
+          SHA=$(sha256sum version.json | awk '{print $1}')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "sha256=$SHA" >> $GITHUB_OUTPUT
           echo "Using version=$VERSION sha256=$SHA"

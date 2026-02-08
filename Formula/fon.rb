@@ -5,11 +5,12 @@
 class Fon < Formula
   desc "Terminal learning agent: PTY proxy, typo fix, error capture, IDE rules"
   homepage "https://fon.ginylil.com"
-  # Versioned URL (same as make download-web-latest VERSION=x.y.z). Version and sha256 updated by CI.
+  # Versioned URL (same as make download-web-latest VERSION=x.y.z).
+  # version and sha256 are updated only by .github/workflows/update-formula.yml — do not edit by hand.
   url "https://fon.ginylil.com/releases/#{version}/version"
   version "0.0.17"
   license "Apache-2.0"
-  sha256 "ceeacdbdee658e732ab7b2091c1af1ffa34c93c32a35ff9440a9fb5eda19bcc6"
+  sha256 "0000000000000000000000000000000000000000000000000000000000000000"
 
   livecheck do
     url "https://fon.ginylil.com/releases/version"
