@@ -76,6 +76,7 @@ class Fon < Formula
       opoo "fon binary not found at #{fon_bin}; skipping IDE setup."
       return
     end
+    ohai "fon #{version} at #{fon_bin} (IDE setup)"
 
     ohai "To add fon to your IDE (MCP + Cursor commands), run:"
     puts "  curl -sSL #{script_url} | python3 - --ide-only"
@@ -92,6 +93,7 @@ class Fon < Formula
     answer = $stdin.gets&.strip&.downcase
     return if answer == "n" || answer == "no"
 
+    ohai "Running IDE setup for fon #{version} (script: #{script_url})"
     # Run in-process (sandbox may block writes to ~/.cursor on macOS; then user runs command in their terminal).
     script_dir = Dir.mktmpdir("fon-postinstall")
     script_path = Pathname(script_dir).join("fon_install.py")
@@ -107,12 +109,8 @@ class Fon < Formula
       opoo "Download failed: #{e.message}. Run the command above in your terminal."
       return
     end
-    # Use invoking user's home from system (Homebrew often overrides HOME to a temp dir).
-    real_home = begin
-      (ENV["USER"] && Etc.getpwnam(ENV["USER"]).dir) || Dir.home
-    rescue ArgumentError, TypeError
-      Dir.home
-    end
+    # Use effective user's home from system (Homebrew overrides HOME to a temp dir).
+    real_home = (Etc.getpwuid(Process.euid).dir rescue Dir.home)
     env = ENV.to_h.merge(
       "FON_BIN" => fon_bin,
       "PATH" => "#{bin}:#{ENV["PATH"]}",
