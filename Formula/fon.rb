@@ -6,10 +6,17 @@ class Fon < Formula
   desc "Terminal learning agent: PTY proxy, typo fix, error capture, IDE rules"
   homepage "https://fon.ginylil.com"
   url "https://fon.ginylil.com/releases/version"
-  version "0.0.0"
+  # Bump this when cutting releases so "brew install" shows the real version (e.g. 0.0.15).
+  version "1.0.0"
   license "Apache-2.0"
   # Checksum omitted: version JSON changes each release; we download binary in install.
   sha256 :no_check
+
+  livecheck do
+    url "https://fon.ginylil.com/releases/version"
+    strategy :page_match
+    regex(/"version"\s*:\s*"v?([^"]+)"/)
+  end
 
   # Skip bottle; we download the pre-built signed binary for this platform.
   pour_bottle? only_if: :default_prefix
