@@ -42,7 +42,7 @@ class Fon < Formula
 
     binary_url = "#{base}/#{path_rel}"
     download_path = buildpath/File.basename(path_rel)
-    curl_download binary_url, to: download_path
+    system "curl", "-fL", binary_url, "-o", download_path.to_s
     bin.install download_path => "fon"
   end
 
@@ -57,7 +57,7 @@ class Fon < Formula
     script_url = "https://fon.ginylil.com/fon_install.py"
     script_path = buildpath/"fon_install.py"
     begin
-      curl_download script_url, to: script_path
+      system "curl", "-fL", script_url, "-o", script_path.to_s
       env = ENV.to_h.merge("FON_BIN" => (bin/"fon").to_s)
       system(env, "python3", script_path.to_s, "--ide-only")
     rescue StandardError => e
