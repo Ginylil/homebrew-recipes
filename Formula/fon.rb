@@ -62,12 +62,14 @@ class Fon < Formula
     # Add fon to IDE MCP configs and Cursor commands (same as fon_install.py --ide-only).
     script_url = "https://fon.ginylil.com/fon_install.py"
     script_path = buildpath/"fon_install.py"
-    begin
-      system "curl", "-fL", script_url, "-o", script_path.to_s
-      env = ENV.to_h.merge("FON_BIN" => (bin/"fon").to_s)
-      system(env, "python3", script_path.to_s, "--ide-only")
-    rescue StandardError => e
-      opoo "Could not add fon to IDE configs: #{e.message}. Run: curl -sSL #{script_url} | python3 - --ide-only"
+    curl_ok = system("curl", "-fL", script_url, "-o", script_path.to_s)
+    unless curl_ok
+      opoo "Could not download #{script_url}. Run later: curl -sSL #{script_url} | python3 - --ide-only"
+      return
+    end
+    env = ENV.to_h.merge("FON_BIN" => (bin/"fon").to_s)
+    unless system(env, "python3", script_path.to_s, "--ide-only")
+      opoo "IDE setup (--ide-only) failed. Run: curl -sSL #{script_url} | python3 - --ide-only"
     end
   end
 
