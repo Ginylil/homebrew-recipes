@@ -7,7 +7,7 @@ class Fon < Formula
   homepage "https://fon.ginylil.com"
   url "https://fon.ginylil.com/releases/version"
   # Bump version and sha256 when cutting releases (version JSON and this checksum change each release).
-  version "1.0.0"
+  version "1.0.1"
   license "Apache-2.0"
   # SHA256 of the current releases/version JSON. Update when deploying a new release (re-run: curl -sL https://fon.ginylil.com/releases/version | shasum -a 256).
   sha256 "305ead4c0ab35698e5da9136af98b8992f5380f7428353be5e233e05ca3eb088"
