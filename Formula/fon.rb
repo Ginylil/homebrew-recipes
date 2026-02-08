@@ -6,11 +6,11 @@ class Fon < Formula
   desc "Terminal learning agent: PTY proxy, typo fix, error capture, IDE rules"
   homepage "https://fon.ginylil.com"
   url "https://fon.ginylil.com/releases/version"
-  # Bump this when cutting releases so "brew install" shows the real version (e.g. 0.0.15).
+  # Bump version and sha256 when cutting releases (version JSON and this checksum change each release).
   version "1.0.0"
   license "Apache-2.0"
-  # Checksum omitted: version JSON changes each release; we download binary in install.
-  sha256 :no_check
+  # SHA256 of the current releases/version JSON. Update when deploying a new release (re-run: curl -sL https://fon.ginylil.com/releases/version | shasum -a 256).
+  sha256 "305ead4c0ab35698e5da9136af98b8992f5380f7428353be5e233e05ca3eb088"
 
   livecheck do
     url "https://fon.ginylil.com/releases/version"
