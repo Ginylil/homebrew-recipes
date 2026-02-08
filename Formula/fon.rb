@@ -106,6 +106,12 @@ class Fon < Formula
     out, err, status = Open3.capture3(env, "bash", "-c", cmd)
     if status.success?
       puts out if out && !out.strip.empty?
+      if err && !err.strip.empty?
+        puts err.strip
+      end
+      if out && out !~ /mcp:|commands:/
+        opoo "MCP/commands lines missing—writes may have been blocked. Run the command above in your terminal."
+      end
       ohai "IDE setup finished. Reload MCP in Cursor and use / in chat."
     else
       opoo "IDE setup failed (sandbox may block writes to ~/.cursor). Run the command above in your terminal."
