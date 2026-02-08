@@ -87,44 +87,28 @@ class Fon < Formula
     answer = $stdin.gets&.strip&.downcase
     return if answer == "n" || answer == "no"
 
-    if OS.mac?
-      setup_script = <<~SCRIPT
-        #!/bin/bash
-        export FON_BIN="#{fon_bin}"
-        export PATH="#{bin}:#{ENV["PATH"]}"
-        echo "Adding fon to your IDE (MCP + Cursor commands)..."
-        curl -sSL "#{script_url}" | python3 - --ide-only
-        echo ""
-        echo "Done. You can close this window."
-      SCRIPT
-      command_path = Pathname(Dir.tmpdir).join("fon-ide-setup-#{Process.pid}.command")
-      command_path.write(setup_script)
-      command_path.chmod(0755)
-      system "open", "-a", "Terminal", command_path.to_s
-      ohai "A Terminal window opened to run IDE setup. Close it when done."
-    else
-      script_dir = Dir.mktmpdir("fon-postinstall")
-      script_path = Pathname(script_dir).join("fon_install.py")
-      begin
-        uri = URI(script_url)
-        resp = Net::HTTP.get_response(uri)
-        unless resp.is_a?(Net::HTTPSuccess)
-          opoo "Download failed: #{resp.code}. Run the command above later."
-          return
-        end
-        script_path.write(resp.body)
-      rescue StandardError => e
-        opoo "Download failed: #{e.message}. Run the command above later."
+    # Run in-process (sandbox may block writes to ~/.cursor on macOS; then user runs command in their terminal).
+    script_dir = Dir.mktmpdir("fon-postinstall")
+    script_path = Pathname(script_dir).join("fon_install.py")
+    begin
+      uri = URI(script_url)
+      resp = Net::HTTP.get_response(uri)
+      unless resp.is_a?(Net::HTTPSuccess)
+        opoo "Download failed: #{resp.code}. Run the command above in your terminal."
         return
       end
-      env = ENV.to_h.merge("FON_BIN" => fon_bin, "PATH" => "#{bin}:#{ENV["PATH"]}")
-      out, err, status = Open3.capture3(env, "python3", script_path.to_s, "--ide-only")
-      unless status.success?
-        opoo "IDE setup failed. Run the command above to retry."
-        puts err.strip if err && !err.strip.empty?
-      else
-        ohai "IDE setup finished. Reload MCP in Cursor and use / in chat."
-      end
+      script_path.write(resp.body)
+    rescue StandardError => e
+      opoo "Download failed: #{e.message}. Run the command above in your terminal."
+      return
+    end
+    env = ENV.to_h.merge("FON_BIN" => fon_bin, "PATH" => "#{bin}:#{ENV["PATH"]}")
+    out, err, status = Open3.capture3(env, "python3", script_path.to_s, "--ide-only")
+    if status.success?
+      ohai "IDE setup finished. Reload MCP in Cursor and use / in chat."
+    else
+      opoo "IDE setup failed (sandbox may block writes to ~/.cursor). Run the command above in your terminal."
+      puts err.strip if err && !err.strip.empty?
     end
   end
 
