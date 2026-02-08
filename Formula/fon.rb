@@ -7,9 +7,9 @@ class Fon < Formula
   homepage "https://fon.ginylil.com"
   # Versioned URL (same as make download-web-latest VERSION=x.y.z). Version and sha256 updated by CI.
   url "https://fon.ginylil.com/releases/#{version}/version"
-  version "1.0.1"
+  version "0.0.17"
   license "Apache-2.0"
-  sha256 "305ead4c0ab35698e5da9136af98b8992f5380f7428353be5e233e05ca3eb088"
+  sha256 "ceeacdbdee658e732ab7b2091c1af1ffa34c93c32a35ff9440a9fb5eda19bcc6"
 
   livecheck do
     url "https://fon.ginylil.com/releases/version"
