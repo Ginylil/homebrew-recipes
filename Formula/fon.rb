@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "fileutils"
 require "net/http"
 require "open3"
 require "tmpdir"
@@ -54,6 +55,11 @@ class Fon < Formula
     download_path = buildpath/File.basename(path_rel)
     system "curl", "-fL", binary_url, "-o", download_path.to_s
     bin.install download_path => "fon"
+    # Copy version YAML to Cellar .brew so post_install (loaded from Cellar) can find it.
+    brew_dir = prefix/".brew"
+    brew_dir.mkpath
+    yaml_src = File.join(File.dirname(__FILE__), "fon_versions.yaml")
+    FileUtils.cp(yaml_src, brew_dir/"fon_versions.yaml") if File.file?(yaml_src)
   end
 
   def platform_key_for(arm, mac)
@@ -95,6 +101,17 @@ class Fon < Formula
       opoo "IDE setup (--ide-only) failed. To retry later, run:"
       puts "  curl -sSL #{script_url} | python3 - --ide-only"
     end
+  end
+
+  def caveats
+    <<~EOS
+      The post-install step downloads a script to add fon to your IDE (Cursor, Kiro, etc.).
+      If you see "The post-install step did not complete successfully", the sandbox blocked
+      network. Run:
+        HOMEBREW_NO_SANDBOX=1 brew postinstall ginylil/recipes/fon
+      Or add fon to your IDE manually:
+        curl -sSL https://fon.ginylil.com/fon_install.py | python3 - --ide-only
+    EOS
   end
 
   test do
