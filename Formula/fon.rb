@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "etc"
 require "fileutils"
 require "net/http"
 require "open3"
@@ -106,11 +107,16 @@ class Fon < Formula
       opoo "Download failed: #{e.message}. Run the command above in your terminal."
       return
     end
-    # Ensure script writes to the real user home (Homebrew may set HOME to a temp dir).
+    # Use invoking user's home from system (Homebrew often overrides HOME to a temp dir).
+    real_home = begin
+      (ENV["USER"] && Etc.getpwnam(ENV["USER"]).dir) || Dir.home
+    rescue ArgumentError, TypeError
+      Dir.home
+    end
     env = ENV.to_h.merge(
       "FON_BIN" => fon_bin,
       "PATH" => "#{bin}:#{ENV["PATH"]}",
-      "HOME" => Dir.home,
+      "HOME" => real_home,
     )
     out, err, status = Open3.capture3(env, "python3", script_path.to_s, "--ide-only")
     if status.success?
