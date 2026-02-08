@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+require "net/http"
 require "open3"
+require "tmpdir"
+require "uri"
 require "yaml"
 
 # fon — terminal learning agent. Remember, remember, the fifth of November.
@@ -60,18 +63,28 @@ class Fon < Formula
   end
 
   def post_install
-    # Add fon to IDE MCP configs and Cursor commands (same as fon_install.py --ide-only).
     ohai "fon: running post_install (IDE setup)"
     script_url = "https://fon.ginylil.com/fon_install.py"
-    script_path = buildpath/"fon_install.py"
-    unless system("curl", "-fL", script_url, "-o", script_path.to_s)
-      opoo "Could not download #{script_url}. Run later: curl -sSL #{script_url} | python3 - --ide-only"
-      raise "post_install: download failed"
+    script_dir = Dir.mktmpdir("fon-postinstall")
+    script_path = Pathname(script_dir).join("fon_install.py")
+    begin
+      uri = URI(script_url)
+      resp = Net::HTTP.get_response(uri)
+      unless resp.is_a?(Net::HTTPSuccess)
+        opoo "Download failed: #{resp.code} #{resp.message} from #{script_url}"
+        puts "  To add fon to your IDE later: curl -sSL #{script_url} | python3 - --ide-only"
+        return
+      end
+      script_path.write(resp.body)
+    rescue StandardError => e
+      opoo "Download failed: #{e.message}"
+      puts "  To add fon to your IDE later: curl -sSL #{script_url} | python3 - --ide-only"
+      return
     end
     fon_bin = (bin/"fon").to_s
     unless File.file?(fon_bin) && File.executable?(fon_bin)
-      opoo "Installed binary not found or not executable: #{fon_bin}"
-      raise "post_install: fon binary missing"
+      opoo "fon binary not found at #{fon_bin}; skipping IDE setup."
+      return
     end
     env = ENV.to_h.merge(
       "FON_BIN" => fon_bin,
@@ -79,9 +92,8 @@ class Fon < Formula
     )
     out, err, status = Open3.capture3(env, "python3", script_path.to_s, "--ide-only")
     unless status.success?
-      opoo "IDE setup (--ide-only) failed. Run manually: curl -sSL #{script_url} | python3 - --ide-only"
-      $stderr.puts err if err.to_s.strip != ""
-      raise "post_install: IDE setup failed (exit #{status.exitstatus})"
+      opoo "IDE setup (--ide-only) failed. To retry later, run:"
+      puts "  curl -sSL #{script_url} | python3 - --ide-only"
     end
   end
 
