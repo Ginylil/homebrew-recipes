@@ -80,6 +80,8 @@ class Fon < Formula
     puts "  curl -sSL #{script_url} | python3 - --ide-only"
     puts "Then reload Cursor Settings → MCP and use / in chat for commands."
     puts ""
+    puts "Tip: So 'Run this now?' can write to ~/.cursor, install with: HOMEBREW_NO_SANDBOX=1 brew install ginylil/recipes/fon"
+    puts ""
 
     return unless $stdin.tty?
 
@@ -117,6 +119,8 @@ class Fon < Formula
       At the end of install you can run IDE setup to add fon to Cursor (MCP + slash commands).
       To run it later:
         curl -sSL https://fon.ginylil.com/fon_install.py | python3 - --ide-only
+      So "Run this now?" works without running the command again, install with:
+        HOMEBREW_NO_SANDBOX=1 brew install ginylil/recipes/fon
       Then reload Cursor Settings → MCP and use / in chat.
     EOS
   end
