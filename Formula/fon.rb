@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
-require "etc"
 require "fileutils"
 require "net/http"
-require "open3"
-require "tmpdir"
 require "uri"
 require "yaml"
 
@@ -56,7 +53,7 @@ class Fon < Formula
     download_path = buildpath/File.basename(path_rel)
     system "curl", "-fL", binary_url, "-o", download_path.to_s
     bin.install download_path => "fon"
-    # Copy version YAML to Cellar .brew so post_install (loaded from Cellar) can find it.
+    # Copy version YAML to Cellar .brew for reference.
     brew_dir = prefix/".brew"
     brew_dir.mkpath
     yaml_src = File.join(File.dirname(__FILE__), "fon_versions.yaml")
@@ -69,64 +66,11 @@ class Fon < Formula
     "#{os}-#{arch}"
   end
 
-  def post_install
-    script_url = "https://fon.ginylil.com/fon_install.py"
-    fon_bin = (bin/"fon").to_s
-    unless File.file?(fon_bin) && File.executable?(fon_bin)
-      opoo "fon binary not found at #{fon_bin}; skipping IDE setup."
-      return
-    end
-    ohai "fon #{version} at #{fon_bin} (IDE setup)"
-
-    ohai "To add fon to your IDE (MCP + Cursor commands), run:"
-    puts "  curl -sSL #{script_url} | python3 - --ide-only"
-    puts "Then reload Cursor Settings → MCP and use / in chat for commands."
-    if ENV["HOMEBREW_NO_SANDBOX"].to_s.empty?
-      puts ""
-      puts "Tip: So 'Run this now?' can write to ~/.cursor, install with: HOMEBREW_NO_SANDBOX=1 brew install ginylil/recipes/fon"
-    end
-    puts ""
-
-    return unless $stdin.tty?
-
-    print "Run this now? [Y/n] "
-    answer = $stdin.gets&.strip&.downcase
-    return if answer == "n" || answer == "no"
-
-    # Use effective user's home from system (Homebrew overrides HOME to a temp dir).
-    real_home = (Etc.getpwuid(Process.euid).dir rescue Dir.home)
-    ohai "Running IDE setup for fon #{version} (HOME=#{real_home}, script: #{script_url})"
-    env = ENV.to_h.merge(
-      "FON_BIN" => fon_bin,
-      "PATH" => "#{bin}:#{ENV["PATH"]}",
-      "HOME" => real_home,
-    )
-    # Run same as user: curl | python3 - (script from stdin).
-    cmd = "curl -sSL #{script_url} | python3 - --ide-only"
-    out, err, status = Open3.capture3(env, "bash", "-c", cmd)
-    if status.success?
-      puts out if out && !out.strip.empty?
-      if err && !err.strip.empty?
-        puts err.strip
-      end
-      if out && out !~ /mcp:|commands:/
-        opoo "MCP/commands lines missing—writes may have been blocked. Run the command above in your terminal."
-      end
-      ohai "IDE setup finished. Reload MCP in Cursor and use / in chat."
-    else
-      opoo "IDE setup failed (sandbox may block writes to ~/.cursor). Run the command above in your terminal."
-      puts err.strip if err && !err.strip.empty?
-    end
-  end
-
   def caveats
     <<~EOS
-      At the end of install you can run IDE setup to add fon to Cursor (MCP + slash commands).
-      To run it later:
+      To integrate fon with your IDE (Cursor, Kiro, Windsurf, etc.—MCP + slash commands), run:
         curl -sSL https://fon.ginylil.com/fon_install.py | python3 - --ide-only
-      So "Run this now?" works without running the command again, install with:
-        HOMEBREW_NO_SANDBOX=1 brew install ginylil/recipes/fon
-      Then reload Cursor Settings → MCP and use / in chat.
+      Then reload your IDE's MCP settings and use / in chat for commands.
     EOS
   end
 
