@@ -1,5 +1,6 @@
-# Update Formula/fon_versions.yaml (version table) and regenerate versioned formulae.
+# Update Formula/fon_versions.yaml (version table). fon.rb reads latest from the table.
 # Trigger: Actions → Update fon formula → Run workflow. Optionally pass sha256 if the computed one fails (e.g. from brew install error).
+# Add versioned formulae (e.g. fon@0.0.17.rb) later only if needed (e.g. breaking change).
 name: Update fon formula
 
 on:
@@ -19,7 +20,7 @@ permissions:
 
 jobs:
   update:
-    name: Update version table and formulae
+    name: Update version table
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -68,9 +69,6 @@ jobs:
             File.write(path, data.to_yaml)
           "
 
-      - name: Regenerate versioned formulae
-        run: ruby scripts/generate-versioned-formulae.rb
-
       - name: Commit and push if changed
         run: |
           if git diff --quiet Formula/; then
@@ -80,5 +78,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/
-          git commit -m "chore(fon): update version table and formulae to ${{ steps.fetch.outputs.version }}"
+          git commit -m "chore(fon): update version table to ${{ steps.fetch.outputs.version }}"
           git push

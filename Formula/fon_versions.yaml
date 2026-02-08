@@ -2,4 +2,4 @@
 # Updated by .github/workflows/update-formula.yml. Add new versions here; formula reads latest.
 latest: "0.0.17"
 versions:
-  "0.0.17": "f4ac2c9eabb32ba9f7cc5056ff32f43a134232c66400c9ed60f588a2ac9f5421"
+  "0.0.17": "ceeacdbdee658e732ab7b2091c1af1ffa34c93c32a35ff9440a9fb5eda19bcc6"
