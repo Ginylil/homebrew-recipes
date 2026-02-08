@@ -10,7 +10,7 @@ class Fon < Formula
   url "https://fon.ginylil.com/releases/#{version}/version"
   version "0.0.17"
   license "Apache-2.0"
-  sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  sha256 "ceeacdbdee658e732ab7b2091c1af1ffa34c93c32a35ff9440a9fb5eda19bcc6"
 
   livecheck do
     url "https://fon.ginylil.com/releases/version"
