@@ -17,3 +17,5 @@ curl -sSL https://fon.ginylil.com/fon_install.py | python3 - --ide-only
 ```
 
 Then reload MCP in your IDE and run `fon web` or `fon check` in chat.
+
+**Formula updates:** The formula pins a specific fon version (same idea as `make download-web-latest VERSION=x.y.z`). To set or bump it: **Actions → Update fon formula → Run workflow**, enter the version (e.g. `1.0.2`). That version must be deployed so that `fon.ginylil.com/releases/{version}/version` exists. Do not edit version or sha256 in the formula by hand.
