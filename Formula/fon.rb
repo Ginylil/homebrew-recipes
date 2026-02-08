@@ -79,8 +79,10 @@ class Fon < Formula
     ohai "To add fon to your IDE (MCP + Cursor commands), run:"
     puts "  curl -sSL #{script_url} | python3 - --ide-only"
     puts "Then reload Cursor Settings → MCP and use / in chat for commands."
-    puts ""
-    puts "Tip: So 'Run this now?' can write to ~/.cursor, install with: HOMEBREW_NO_SANDBOX=1 brew install ginylil/recipes/fon"
+    if ENV["HOMEBREW_NO_SANDBOX"].to_s.empty?
+      puts ""
+      puts "Tip: So 'Run this now?' can write to ~/.cursor, install with: HOMEBREW_NO_SANDBOX=1 brew install ginylil/recipes/fon"
+    end
     puts ""
 
     return unless $stdin.tty?
@@ -104,9 +106,15 @@ class Fon < Formula
       opoo "Download failed: #{e.message}. Run the command above in your terminal."
       return
     end
-    env = ENV.to_h.merge("FON_BIN" => fon_bin, "PATH" => "#{bin}:#{ENV["PATH"]}")
+    # Ensure script writes to the real user home (Homebrew may set HOME to a temp dir).
+    env = ENV.to_h.merge(
+      "FON_BIN" => fon_bin,
+      "PATH" => "#{bin}:#{ENV["PATH"]}",
+      "HOME" => Dir.home,
+    )
     out, err, status = Open3.capture3(env, "python3", script_path.to_s, "--ide-only")
     if status.success?
+      puts out if out && !out.strip.empty?
       ohai "IDE setup finished. Reload MCP in Cursor and use / in chat."
     else
       opoo "IDE setup failed (sandbox may block writes to ~/.cursor). Run the command above in your terminal."
