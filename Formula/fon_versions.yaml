@@ -1,6 +1,7 @@
 ---
-latest: 0.0.20
+latest: 0.0.21
 versions:
   0.0.17: ceeacdbdee658e732ab7b2091c1af1ffa34c93c32a35ff9440a9fb5eda19bcc6
   0.0.19: fd244bdd6ff574e4b639c9dc011053326d7a44aeba9e9c2b2cb0e0d3f0a6c1a7
   0.0.20: b2e8b675aa2d5e3c9eb3282feac3bee5263b3ec757fb2499471cabca3a3f2c2c
+  0.0.21: cae89502574e87bb68c0b0795c857b8b77d5fdc069dffe89f3c0ecff4ef1c265
