@@ -60,6 +60,11 @@ class Fon < Formula
     FileUtils.cp(yaml_src, brew_dir/"fon_versions.yaml") if File.file?(yaml_src)
   end
 
+  def post_install
+    # Add fon to IDE MCP configs (~/.cursor/mcp.json, etc.) so user gets IDE integration without a second step.
+    system "#{bin}/fon", "add-to-ide"
+  end
+
   def platform_key_for(arm, mac)
     os = mac ? "darwin" : "linux"
     arch = arm ? "arm64" : "amd64"
@@ -68,9 +73,8 @@ class Fon < Formula
 
   def caveats
     <<~EOS
-      To integrate fon with your IDE (Cursor, Kiro, Windsurf, etc.—MCP + slash commands), run:
-        curl -sSL https://fon.ginylil.com/fon_install.py | python3 - --ide-only
-      Then reload your IDE's MCP settings and use / in chat for commands.
+      IDE integration (Cursor, Kiro, Windsurf, etc.) was run automatically. Reload your IDE's MCP settings and use / in chat for commands.
+      To add fon to a new IDE later, run: fon add-to-ide
     EOS
   end
 
