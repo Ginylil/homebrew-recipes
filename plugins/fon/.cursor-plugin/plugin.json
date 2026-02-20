@@ -1,0 +1,13 @@
+{
+  "name": "fon",
+  "displayName": "fon (fifth-of-november)",
+  "version": "0.1.0",
+  "description": "Cursor plugin for fon — terminal learning agent (code check, web UI, PTY interception, MCP). Install with: brew install ginylil/recipes/fon.",
+  "author": {
+    "name": "Ginylil",
+    "email": "support@ginylil.com"
+  },
+  "license": "Apache-2.0",
+  "keywords": ["fon", "fifth-of-november", "homebrew", "cursor", "code-quality", "learning-agent", "mcp"],
+  "logo": "assets/logo.png"
+}

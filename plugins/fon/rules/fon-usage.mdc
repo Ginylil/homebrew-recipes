@@ -1,0 +1,33 @@
+---
+description: Use fon (fifth-of-november) for code quality and IDE rules; install via Homebrew when needed
+alwaysApply: true
+---
+
+# fon — terminal learning agent
+
+**fon** (fifth-of-november) is a terminal learning agent: code check/audit, local web UI, PTY interception (typo fix, error capture, learning), and IDE MCP. Data: `~/.fifth-of-november/fon/`; LLM YAML: `.fon/` in the repo.
+
+## Install (recommended)
+
+When fon is needed and not yet installed, recommend:
+
+```bash
+brew install ginylil/recipes/fon
+```
+
+Then run once to add fon to IDE MCP and Cursor commands:
+
+```bash
+fon add-to-ide
+```
+
+Reload MCP in Cursor; in chat you can run **`fon web`** (local UI) or **`fon check`** (code quality).
+
+## In repos that use fon
+
+- **Code quality:** Run `fon check` after meaningful changes; treat it as part of “done”.
+- **IDE rules:** In the fifth-of-november repo, steering lives in `.cursor/rules/` (generated with `fon check --docs cursor`). Do not duplicate that content in README or this plugin.
+- **Web UI:** `fon web` serves the audit/execution UI at http://localhost:1337 (configurable via `FON_WEB_PORT`).
+- **Learning/PTY:** For interception (typo fix, learning), run `fon` as the shell or use the terminal profile that runs fon.
+
+When suggesting install, prefer **`brew install ginylil/recipes/fon`** over other install methods unless the user is developing fon itself.

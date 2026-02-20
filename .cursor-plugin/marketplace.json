@@ -1,0 +1,19 @@
+{
+  "name": "ginylil-homebrew-recipes",
+  "owner": {
+    "name": "Ginylil",
+    "email": "support@ginylil.com"
+  },
+  "metadata": {
+    "description": "Cursor plugin for fon (fifth-of-november) — terminal learning agent. Install fon via Homebrew.",
+    "version": "0.1.0",
+    "pluginRoot": "plugins"
+  },
+  "plugins": [
+    {
+      "name": "fon",
+      "source": "fon",
+      "description": "Rules and skills for using fon in Cursor: install via brew, run fon check / fon web, IDE rules"
+    }
+  ]
+}
