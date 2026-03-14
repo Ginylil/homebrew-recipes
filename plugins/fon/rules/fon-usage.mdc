@@ -15,10 +15,17 @@ When fon is needed and not yet installed, recommend:
 brew install ginylil/recipes/fon
 ```
 
-Then run once to add fon to IDE MCP and Cursor commands:
+Then open browser-first setup:
 
 ```bash
-fon add-to-ide
+fon web --open
+```
+
+Terminal alternative:
+
+```bash
+fon add-to-ide --list
+fon add-to-ide --enable cursor
 ```
 
 Reload MCP in Cursor; in chat you can run **`fon web`** (local UI) or **`fon check`** (code quality).

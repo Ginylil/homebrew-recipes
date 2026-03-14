@@ -8,12 +8,19 @@ Homebrew tap for **fon** — terminal learning agent (rules enforcer, PTY proxy,
 brew install ginylil/recipes/fon
 ```
 
-Homebrew adds the tap automatically. If you had the old tap `ginylil/fon`, run: `brew untap ginylil/fon` first. The formula installs the signed binary from [fon.ginylil.com](https://fon.ginylil.com) and runs the same IDE setup as the Python installer: it adds fon to your IDE MCP configs (Cursor, Kiro, Windsurf, etc.) and installs Cursor global commands.
+Homebrew adds the tap automatically. If you had the old tap `ginylil/fon`, run: `brew untap ginylil/fon` first. The formula installs the signed binary from [fon.ginylil.com](https://fon.ginylil.com). It does not mutate IDE config during `brew install`.
 
-If the IDE setup step fails (e.g. no network or no Python), install the binary only and run:
+After install, use the browser-first onboarding flow:
 
 ```bash
-curl -sSL https://fon.ginylil.com/fon_install.py | python3 - --ide-only
+fon web --open
+```
+
+Terminal alternative:
+
+```bash
+fon add-to-ide --list
+fon add-to-ide --enable cursor
 ```
 
 Then reload MCP in your IDE and run `fon web` or `fon check` in chat.

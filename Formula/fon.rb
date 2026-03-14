@@ -68,9 +68,14 @@ class Fon < Formula
 
   def caveats
     <<~EOS
-      To add fon to your IDE (Cursor, Kiro, Windsurf, etc.), run once after install or upgrade:
-        fon add-to-ide
-      Then reload your IDE's MCP settings and use / in chat for commands.
+      Next steps after install or upgrade:
+        fon web --open
+
+      Terminal alternative:
+        fon add-to-ide --list
+        fon add-to-ide --enable cursor
+
+      Reload your IDE's MCP settings after applying setup changes.
     EOS
   end
 

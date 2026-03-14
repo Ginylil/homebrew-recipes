@@ -16,9 +16,9 @@ description: Run fon code-quality checks. Use when the user or repo uses fon and
 1. **Ensure fon is installed.** If not, recommend:
    ```bash
    brew install ginylil/recipes/fon
-   fon add-to-ide
+   fon web --open
    ```
-   Then reload MCP.
+   Terminal alternative: `fon add-to-ide --enable cursor`. Then reload MCP.
 
 2. **Run checks:**
    ```bash

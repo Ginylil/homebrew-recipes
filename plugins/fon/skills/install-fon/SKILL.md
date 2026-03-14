@@ -1,6 +1,6 @@
 ---
 name: install-fon
-description: Install fon (fifth-of-november) via Homebrew and add it to the user's IDE. Use when the user wants to install fon or when fon commands are missing.
+description: Install fon (fifth-of-november) via Homebrew, then guide the user through IDE setup. Use when the user wants to install fon or when fon commands are missing.
 ---
 
 # Install fon
@@ -20,13 +20,14 @@ description: Install fon (fifth-of-november) via Homebrew and add it to the user
    If the user doesn’t use Homebrew, suggest the official installer:  
    `curl -sSL https://fon.ginylil.com/fon_install.py | python3 -`
 
-2. **Add fon to the IDE** (Cursor, Kiro, Windsurf, etc.):
+2. **Open browser-first IDE setup**:
    ```bash
-   fon add-to-ide
+   fon web --open
    ```
-   If install failed the IDE step (e.g. no network), they can run later:
+   Terminal alternative:
    ```bash
-   curl -sSL https://fon.ginylil.com/fon_install.py | python3 - --ide-only
+   fon add-to-ide --list
+   fon add-to-ide --enable cursor
    ```
 
 3. Tell the user to **reload MCP** in Cursor (and restart the terminal if needed), then they can run in chat: **`fon web`** or **`fon check`**.

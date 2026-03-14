@@ -6,6 +6,6 @@ This Cursor plugin provides rules and skills for **fon** — the terminal learni
 brew install ginylil/recipes/fon
 ```
 
-Then run `fon add-to-ide` and reload MCP in Cursor to use **`fon web`** or **`fon check`** in chat.
+Then run `fon web --open` for browser-first IDE setup, or use `fon add-to-ide` in the terminal. Reload MCP in Cursor to use **`fon web`** or **`fon check`** in chat.
 
 **Plugin contents:** rules for using fon (install via brew, run fon check after changes); skills for installing fon and running fon check.
