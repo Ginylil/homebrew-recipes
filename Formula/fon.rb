@@ -75,7 +75,13 @@ class Fon < Formula
         fon add-to-ide --list
         fon add-to-ide --enable cursor
 
-      Reload your IDE's MCP settings after applying setup changes.
+      If fon was already running when you upgraded:
+        reload MCP in the IDE that uses fon
+        if you started `fon web` manually, restart that process too
+
+      If the IDE still shows an old fon version:
+        check its MCP config command path points to Homebrew's fon
+        not ~/.local/fon/bin/fon or another stale path
     EOS
   end
 

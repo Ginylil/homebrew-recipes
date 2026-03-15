@@ -25,4 +25,12 @@ fon add-to-ide --enable cursor
 
 Then reload MCP in your IDE and run `fon web` or `fon check` in chat.
 
-**Formula updates:** The formula pins a specific fon version (same idea as `make download-web-latest VERSION=x.y.z`). To set or bump it: **Actions → Update fon formula → Run workflow**, enter the version (e.g. `1.0.2`). That version must be deployed so that `fon.ginylil.com/releases/{version}/version` exists. Do not edit version or sha256 in the formula by hand.
+**Formula updates:** Use the local maintenance entrypoints instead of editing workflow YAML or `fon_versions.yaml` by hand.
+
+```bash
+make verify-release VERSION=0.0.26
+make update-formula VERSION=0.0.26
+make test
+```
+
+The GitHub Actions workflow uses the same `Makefile` and `scripts/` entrypoints. A stable release is only allowed through when both `fon.ginylil.com/releases/{version}/version` and `fon.ginylil.com/releases/version` match the target version.

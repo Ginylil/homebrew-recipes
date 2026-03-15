@@ -24,50 +24,22 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.3.1
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Fetch version and compute or use sha256
-        id: fetch
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Test stable repo tooling
         run: |
-          VERSION="${{ github.event.inputs.version }}"
-          SHA_INPUT="${{ github.event.inputs.sha256 }}"
-          URL="https://fon.ginylil.com/releases/${VERSION}/version"
+          make test
 
-          if [ -n "$SHA_INPUT" ]; then
-            SHA=$(printf '%s' "$SHA_INPUT" | tr -d '[:space:]' | grep -E '^[a-f0-9]{64}$' || true)
-            if [ -z "$SHA" ]; then
-              echo "::error::Optional sha256 must be 64 hex characters."
-              exit 1
-            fi
-            echo "Using provided sha256=$SHA"
-          else
-            curl -sSL -f -o version.json "$URL" || { echo "::error::GET $URL failed. Ensure version $VERSION is deployed."; exit 1; }
-            PARSED=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' version.json | head -1)
-            if [ -z "$PARSED" ] || [ "$PARSED" != "$VERSION" ]; then
-              echo "::error::Invalid or version-mismatch JSON at $URL (got '$PARSED')."
-              exit 1
-            fi
-            SHA=$(sha256sum version.json | awk '{print $1}')
-            echo "Computed sha256=$SHA from download"
-          fi
-
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "sha256=$SHA" >> $GITHUB_OUTPUT
-
-      - name: Update fon_versions.yaml
+      - name: Update formula via stable repo tooling
         run: |
-          VERSION="${{ steps.fetch.outputs.version }}"
-          SHA="${{ steps.fetch.outputs.sha256 }}"
-          ruby -r yaml -e "
-            path = 'Formula/fon_versions.yaml'
-            data = YAML.load_file(path)
-            data['versions'] ||= {}
-            data['versions']['$VERSION'] = '$SHA'
-            data['latest'] = '$VERSION'
-            File.write(path, data.to_yaml)
-          "
+          make update-formula VERSION="${{ github.event.inputs.version }}" SHA256="${{ github.event.inputs.sha256 }}"
 
       - name: Commit and push if changed
         run: |
@@ -78,5 +50,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/
-          git commit -m "chore(fon): update version table to ${{ steps.fetch.outputs.version }}"
+          git commit -m "chore(fon): update version table to ${{ github.event.inputs.version }}"
           git push
