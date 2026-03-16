@@ -61,6 +61,7 @@ def main() -> int:
     print(f"Verified release {result['version']}")
     print(f"  pinned: {result['pinned_url']}")
     print(f"  latest: {result['latest_url']} -> {result['latest_version']}")
+    print(f"  notices: {result['notices_url']}")
     print(f"  sha256: {result['sha256']}")
     if args.output_json:
         path = Path(args.output_json)

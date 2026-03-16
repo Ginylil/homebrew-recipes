@@ -12,6 +12,7 @@ from pathlib import Path
 RELEASES_BASE_DEFAULT = "https://fon.ginylil.com/releases"
 CONTENT_TYPE_JSON = "application/json"
 SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
+THIRD_PARTY_NOTICES_FILENAME = "THIRD_PARTY_NOTICES.txt"
 
 
 class ReleaseError(RuntimeError):
@@ -45,6 +46,21 @@ def fetch_json_bytes(url: str) -> tuple[bytes, str]:
             f"Expected application/json from {url}, got {content_type or '<empty>'}. First bytes: {preview}"
         )
     return payload, content_type
+
+
+def fetch_text_bytes(url: str) -> bytes:
+    """Fetch one text endpoint and return raw bytes."""
+    try:
+        with urllib.request.urlopen(url, timeout=30) as response:
+            status = getattr(response, "status", 200)
+            payload = response.read()
+    except urllib.error.HTTPError as exc:
+        raise ReleaseError(f"Expected HTTP 200 from {url}, got {exc.code}.") from exc
+    except urllib.error.URLError as exc:
+        raise ReleaseError(f"GET {url} failed: {exc.reason}.") from exc
+    if status != 200:
+        raise ReleaseError(f"Expected HTTP 200 from {url}, got {status}.")
+    return payload
 
 
 def parse_json(payload: bytes, url: str) -> dict:
@@ -101,6 +117,14 @@ def validate_release(
             f"Version mismatch at {latest_url}: expected {version}, got {latest_version or '<empty>'}."
         )
 
+    notices_url = f"{base_url.rstrip('/')}/{version}/{THIRD_PARTY_NOTICES_FILENAME}"
+    notices_payload = fetch_text_bytes(notices_url)
+    notices_text = notices_payload.decode("utf-8", errors="replace")
+    if "fon third-party notices" not in notices_text:
+        raise ReleaseError(
+            f"Expected {notices_url} to contain the third-party notices header."
+        )
+
     sha256_value = (
         normalize_sha256(sha256_override)
         if sha256_override is not None and sha256_override.strip()
@@ -112,6 +136,7 @@ def validate_release(
         "pinned_url": pinned_url,
         "latest_url": latest_url,
         "latest_version": latest_version,
+        "notices_url": notices_url,
     }
 
 

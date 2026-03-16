@@ -37,7 +37,8 @@ class ReleaseToolsTest(unittest.TestCase):
 
     def test_validate_release_rejects_latest_drift(self) -> None:
         """Stable release validation should fail when latest metadata still lags."""
-        original_fetch = release_tools.fetch_json_bytes
+        original_fetch_json = release_tools.fetch_json_bytes
+        original_fetch_text = release_tools.fetch_text_bytes
 
         def fake_fetch(url: str) -> tuple[bytes, str]:
             if url.endswith("/0.0.26/version"):
@@ -47,15 +48,18 @@ class ReleaseToolsTest(unittest.TestCase):
             return json.dumps(payload).encode("utf-8"), "application/json"
 
         release_tools.fetch_json_bytes = fake_fetch
+        release_tools.fetch_text_bytes = lambda url: b"fon third-party notices\n"
         try:
             with self.assertRaises(ReleaseError):
                 validate_release(version="0.0.26")
         finally:
-            release_tools.fetch_json_bytes = original_fetch
+            release_tools.fetch_json_bytes = original_fetch_json
+            release_tools.fetch_text_bytes = original_fetch_text
 
     def test_validate_release_accepts_matching_metadata(self) -> None:
         """Release validation should return the computed SHA-256 when metadata matches."""
-        original_fetch = release_tools.fetch_json_bytes
+        original_fetch_json = release_tools.fetch_json_bytes
+        original_fetch_text = release_tools.fetch_text_bytes
 
         def fake_fetch(url: str) -> tuple[bytes, str]:
             payload = {"version": "0.0.26"}
@@ -63,14 +67,36 @@ class ReleaseToolsTest(unittest.TestCase):
             return raw, "application/json; charset=utf-8"
 
         release_tools.fetch_json_bytes = fake_fetch
+        release_tools.fetch_text_bytes = lambda url: b"fon third-party notices\n"
         try:
             result = validate_release(version="0.0.26")
         finally:
-            release_tools.fetch_json_bytes = original_fetch
+            release_tools.fetch_json_bytes = original_fetch_json
+            release_tools.fetch_text_bytes = original_fetch_text
 
         self.assertEqual(result["version"], "0.0.26")
         self.assertEqual(result["latest_version"], "0.0.26")
+        self.assertTrue(result["notices_url"].endswith("/0.0.26/THIRD_PARTY_NOTICES.txt"))
         self.assertEqual(len(result["sha256"]), 64)
+
+    def test_validate_release_rejects_missing_third_party_notices(self) -> None:
+        """Release validation should fail if the notices asset is missing or malformed."""
+        original_fetch_json = release_tools.fetch_json_bytes
+        original_fetch_text = release_tools.fetch_text_bytes
+
+        def fake_fetch(url: str) -> tuple[bytes, str]:
+            payload = {"version": "0.0.26"}
+            raw = json.dumps(payload).encode("utf-8")
+            return raw, "application/json; charset=utf-8"
+
+        release_tools.fetch_json_bytes = fake_fetch
+        release_tools.fetch_text_bytes = lambda url: b""
+        try:
+            with self.assertRaises(ReleaseError):
+                validate_release(version="0.0.26")
+        finally:
+            release_tools.fetch_json_bytes = original_fetch_json
+            release_tools.fetch_text_bytes = original_fetch_text
 
 
 if __name__ == "__main__":

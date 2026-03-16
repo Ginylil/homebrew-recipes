@@ -11,6 +11,7 @@ require "yaml"
 class Fon < Formula
   desc "Terminal learning agent: PTY proxy, typo fix, error capture, IDE rules"
   homepage "https://fon.ginylil.com"
+  THIRD_PARTY_NOTICES_FILENAME = "THIRD_PARTY_NOTICES.txt"
 
   FON_VERSIONS = YAML.load_file(File.join(File.dirname(__FILE__), "fon_versions.yaml"))
   FON_VERSION = FON_VERSIONS["latest"]
@@ -53,6 +54,12 @@ class Fon < Formula
     download_path = buildpath/File.basename(path_rel)
     system "curl", "-fL", binary_url, "-o", download_path.to_s
     bin.install download_path => "fon"
+
+    notices_url = "#{base}/#{version}/#{THIRD_PARTY_NOTICES_FILENAME}"
+    notices_path = buildpath/THIRD_PARTY_NOTICES_FILENAME
+    system "curl", "-fL", notices_url, "-o", notices_path.to_s
+    pkgshare.install notices_path
+
     # Copy version YAML to Cellar .brew for reference.
     brew_dir = prefix/".brew"
     brew_dir.mkpath
@@ -82,6 +89,9 @@ class Fon < Formula
       If the IDE still shows an old fon version:
         check its MCP config command path points to Homebrew's fon
         not ~/.local/fon/bin/fon or another stale path
+
+      Third-party notices installed by Homebrew:
+        #{opt_pkgshare}/#{THIRD_PARTY_NOTICES_FILENAME}
     EOS
   end
 
@@ -89,5 +99,6 @@ class Fon < Formula
     assert_match(/usage|fon/i, shell_output("#{bin}/fon --help 2>&1"))
     version_out = shell_output("#{bin}/fon --version 2>&1")
     assert_match(/\d+\.\d+\.\d+/, version_out, "fon --version should print a semver")
+    assert_predicate pkgshare/THIRD_PARTY_NOTICES_FILENAME, :exist?
   end
 end

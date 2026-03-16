@@ -8,7 +8,7 @@ Homebrew tap for **fon** — terminal learning agent (rules enforcer, PTY proxy,
 brew install ginylil/recipes/fon
 ```
 
-Homebrew adds the tap automatically. If you had the old tap `ginylil/fon`, run: `brew untap ginylil/fon` first. The formula installs the signed binary from [fon.ginylil.com](https://fon.ginylil.com). It does not mutate IDE config during `brew install`.
+Homebrew adds the tap automatically. If you had the old tap `ginylil/fon`, run: `brew untap ginylil/fon` first. The formula installs the signed binary from [fon.ginylil.com](https://fon.ginylil.com) and also installs `THIRD_PARTY_NOTICES.txt` under `$(brew --prefix)/share/fon/`. It does not mutate IDE config during `brew install`.
 
 After install, use the browser-first onboarding flow:
 
@@ -33,4 +33,4 @@ make update-formula VERSION=0.0.26
 make test
 ```
 
-The GitHub Actions workflow uses the same `Makefile` and `scripts/` entrypoints. A stable release is only allowed through when both `fon.ginylil.com/releases/{version}/version` and `fon.ginylil.com/releases/version` match the target version.
+The GitHub Actions workflow uses the same `Makefile` and `scripts/` entrypoints. A stable release is only allowed through when `fon.ginylil.com/releases/{version}/version`, `fon.ginylil.com/releases/version`, and `fon.ginylil.com/releases/{version}/THIRD_PARTY_NOTICES.txt` all match the expected release state.
