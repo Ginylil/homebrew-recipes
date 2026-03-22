@@ -17,6 +17,9 @@ class Fon < Formula
   FON_VERSION = FON_VERSIONS["latest"]
   FON_SHA256 = FON_VERSIONS["versions"][FON_VERSION]
 
+  # Identifies downloads from this formula in CDN logs / Telegram (vs bare curl or browser).
+  CURL_USER_AGENT = "Homebrew-fon/#{FON_VERSION} (formula=ginylil/recipes/fon; +https://github.com/ginylil/homebrew-recipes)".freeze
+
   url "https://fon.ginylil.com/releases/#{FON_VERSION}/version"
   version FON_VERSION
   sha256 FON_SHA256
@@ -52,12 +55,12 @@ class Fon < Formula
 
     binary_url = "#{base}/#{path_rel}"
     download_path = buildpath/File.basename(path_rel)
-    system "curl", "-fL", binary_url, "-o", download_path.to_s
+    system "curl", "-fL", "-A", CURL_USER_AGENT, binary_url, "-o", download_path.to_s
     bin.install download_path => "fon"
 
     notices_url = "#{base}/#{version}/#{THIRD_PARTY_NOTICES_FILENAME}"
     notices_path = buildpath/THIRD_PARTY_NOTICES_FILENAME
-    system "curl", "-fL", notices_url, "-o", notices_path.to_s
+    system "curl", "-fL", "-A", CURL_USER_AGENT, notices_url, "-o", notices_path.to_s
     pkgshare.install notices_path
 
     # Copy version YAML to Cellar .brew for reference.

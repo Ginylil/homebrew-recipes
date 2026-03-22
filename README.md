@@ -10,6 +10,8 @@ brew install ginylil/recipes/fon
 
 Homebrew adds the tap automatically. If you had the old tap `ginylil/fon`, run: `brew untap ginylil/fon` first. The formula installs the signed binary from [fon.ginylil.com](https://fon.ginylil.com) and also installs `THIRD_PARTY_NOTICES.txt` under `$(brew --prefix)/share/fon/`. It does not mutate IDE config during `brew install`.
 
+Binary and notices downloads use a custom **User-Agent** (`Homebrew-fon/<version> (formula=ginylil/recipes/fon; …)`) so CDN or Telegram release alerts can tell **Homebrew formula** fetches apart from a plain `curl` to the same URLs.
+
 After install, use the browser-first onboarding flow:
 
 ```bash
